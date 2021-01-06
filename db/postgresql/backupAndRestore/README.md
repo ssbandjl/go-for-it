@@ -1,4 +1,11 @@
+# PostgreSQL备份还原
+
+
+
+
+
 # 参考文档
+
 https://www.postgresql.org/docs/9.1/backup-dump.html
 
 
@@ -19,7 +26,7 @@ pg_dump is a regular PostgreSQL client application (albeit a particularly clever
 
 连接信息
 
-To specify which database server pg_dump should contact, use the command line options `-h host` and `-p port`. The default host is the local host or whatever your `PGHOST` environment variable specifies 默认从环境变量中获取主机. Similarly, the default port is indicated by the `PGPORT` environment variable or, failing that, by the compiled-in default. (Conveniently, the server will normally have the same compiled-in default.)
+To specify which database server pg_dump should contact, use the command line options `-h host` and `-p port`. The default host is the local host or whatever your `PGHOST` environment variable specifies 默认从环境变量中获取主机. Similarly, the default port is indicated by the `PGPORT` environment variable or, failing that, by the compiled-in default. (Conveniently, the server will normally have the same compiled-in default.) `PGPASSWORD`
 
 Like any other PostgreSQL client application, pg_dump will by default connect with the database user name that is equal to the current operating system user name 默认操作与用户名相同的数据库名. To override this, either specify the `-U` option or set the environment variable `PGUSER`. Remember that pg_dump connections are subject to the normal client authentication mechanisms (which are described in [Chapter 19](https://www.postgresql.org/docs/9.1/client-authentication.html)).
 
