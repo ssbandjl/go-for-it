@@ -28,3 +28,7 @@
       - 备份还原
         + [PostgreSQL备份还原](./db/postgresql/backupAndRestore/README.md)
 
+## K8S
+
+### [在Pod间拷贝文件](k8s/pod/copyFilePod2Pod/在pod间拷贝文件.md)
+
