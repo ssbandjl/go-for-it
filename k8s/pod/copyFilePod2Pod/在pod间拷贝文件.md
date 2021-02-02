@@ -5,12 +5,12 @@
 想想咱们遇到以下问题一般怎么解决? 
 
 - 新建了一个Pod, 想把另外一个Pod中的文件拷贝到新Pod中进行分析, 怎么实现呢?
-- 如何在项目中, 如何实现Pod间文件拷贝呢? 比如就像kubectl cp命令一样的效果
+- 如何在项目中, 像kubectl cp拷贝文件一样, 实现Pod间文件拷贝呢? 
 - 新Pod与实例Pod共享pvc? 或者封装一个带认证上下文的kubectl执行命令行?
 
 ## 简介
 
-本文通过K8S的exec websocket接口结合tar将文件树压缩为数据流以及解压实现两个Pod间拷贝文件
+本文通过K8S的exec websocket接口结合tar将文件树压缩为数据流以及解压还原, 实现两个Pod间拷贝文件的功能.
 
 关于exec接口请参考:https://www.cnblogs.com/a00ium/p/10905279.html
 
@@ -18,14 +18,14 @@
 
 ## 请看图
 
-![image-20210201221417095](/Users/xb/Library/Application Support/typora-user-images/image-20210201221417095.png)
+![image-20210202204806486](/Users/xb/Library/Application Support/typora-user-images/image-20210202204806486.png)
 
 
 
 ## 流程说明
 
 - 首先初始化信号通道, 用于协程间的信号通知, 收到信号的协程执行暂停/退出循环/关闭通道等操作
-- 初始化数据字节数组通道, 用于将源Pod的标准输出放入通道, 发送给目的Pod标准输入的数据就是从该通道中读取
+- 初始化数据通道srcStdOutCh, 类型为字节数组[]byte, 用于将源Pod的标准输出放入通道, 发送给目的Pod标准输入的数据就是从该数据通道中读取
 - 拼接exec接口的访问地址(集群连接,token), tar压缩命令, 标准输入/输出,tty, pod名,容器名等参数. tar czf - /var/log/xxx.log 表示将该文件树结构压缩为数据流
 - 调用websocket的Dialer方法与源Pod容器建立websocket连接, 并开启协程将标准输出写入数据通道srcStdOutCh
 - 参考源pod exec接口, 拼接目的Pod exec访问连接, tar xzf - -C /tmp表示从标准输入读取数据流, 并解压成文件树结构(注意:解压后包含文件目录树结构)
@@ -34,12 +34,14 @@
 ## 注意事项
 
 - wesocket连上源Pod时, 标准输出中会输出空数据, tar命令输出等干扰数据, 所以接收数据的时候需要传入一个过滤器回调函数, 用于数据过滤
-- 向目的容器发送数据时, 需要将源容器收到的第一个字节删除, 一般为1, 表示标准输出标识, 发送给目的容器是不需要该字节
+- 向目的容器发送数据时, 需要将源容器收到的第一个字节删除, 一般为1, 表示标准输出标识, 发送给目的容器是不需要该字节的
 - 发送数据时, 需要设置第一个字节为0, 表示发送到标准输入
 
 
 
 ## 参考代码
+
+cp.go
 
 ```golang
 /*
@@ -311,11 +313,38 @@ Break2Main:
 }
 ```
 
+cp_test.go
+
+```go
+package cpFilePod2Pod
+
+import (
+	"log"
+	"testing"
+)
+
+// go test -race -test.run TestCpPod2Pod  切到该目录执行该测试
+func TestCpPod2Pod(t *testing.T) {
+	log.Printf("开始测试")
+	CpPod2Pod()
+}
+```
+
+```bash
+参考结果:
+源容器:
+root@xxx-mysql-0:/var/log/mysql# md5sum slow.log
+16577613b6ea957ecb5d9d5e976d9c50  slow.log
+目的容器:
+root@xxx-75bdcdb8cf-hq9wf:/tmp/var/log/mysql# md5sum slow.log
+16577613b6ea957ecb5d9d5e976d9c50  slow.log
+```
+
 
 
 ## 参考文档
 
-https://www.cnblogs.com/a00ium/p/10905279.html
+Kubernetes exec API串接分析:https://www.cnblogs.com/a00ium/p/10905279.html
 
-https://ica10888.com/2019/08/31/kubernetes-client-go-%E5%AE%9E%E7%8E%B0-kubectl-copy.html
+kubernetes-client-go-实现-kubectl-copy:https://ica10888.com/2019/08/31/kubernetes-client-go-%E5%AE%9E%E7%8E%B0-kubectl-copy.html
 
