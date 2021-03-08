@@ -19,7 +19,7 @@
     * MongoDB
       - 备份还原
         + [MongoDB备份还原方案](./db/mongodb/backupAndRestore/MongoDB备份还原方案.md)
-        + [MongoDB备份方式](./db/mongodb/backupAndRestore/MongoDB Backup Methods.md)
+        + [MongoDB备份方式](./db/mongodb/backupAndRestore/MongodbBackupMethods.md)
     * Redis
       - Redis持久化
         + [Redis官方持久化文档(译)](./db/redis/persistence/RedisPersistence.md)
