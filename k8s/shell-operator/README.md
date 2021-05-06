@@ -42,19 +42,21 @@ Shell-operator provides: 功能
 
 > You need to have a Kubernetes cluster, and the `kubectl` must be configured to communicate with your cluster.
 
-The simplest setup of shell-operator in your cluster consists of these steps:
+The simplest setup of shell-operator in your cluster consists of these steps: 最简单的shell-operator安装步骤
 
-- build an image with your hooks (scripts)
-- create necessary RBAC objects (for `kubernetes` bindings)
-- run Pod or Deployment with the built image
+- build an image with your hooks (scripts) 将钩子(脚本集)构建为一个镜像
+- create necessary RBAC objects (for `kubernetes` bindings) 创建RBAC对象
+- run Pod or Deployment with the built image  用构建的镜像运行一个Pod或部署即可
 
-For more configuration options see [RUNNING](RUNNING.md).
+For more configuration options see [RUNNING](RUNNING.md). 配置选项
 
 ## Build an image with your hooks
 
-A hook is a script that, when executed with `--config` option, outputs configuration to stdout in YAML or JSON format. [Learn more](HOOKS.md) about hooks.
+A hook is a script that, when executed with `--config` option, outputs configuration to stdout in YAML or JSON format. [Learn more](HOOKS.md) about hooks. 一个钩子就是一个脚本, 当脚本以--config选项执行时, 标准输出的JSON或YAML就是配置钩子的配置
 
 Let's create a small operator that will watch for all Pods in all Namespaces and simply log the name of a new Pod.
+
+示例: 让我们创建一个简易的oprator, 它会watch所有的Pod事件, 当新Pod创建时, 通过日志打印该信息
 
 `kubernetes` binding is used to tell shell-operator about objects that we want to watch. Create the `pods-hook.sh` file with the following content:
 
@@ -107,10 +109,10 @@ docker push registry.mycompany.com/shell-operator:monitor-pods
 We need to watch for Pods in all Namespaces. That means that we need specific RBAC definitions for shell-operator:
 
 ```shell
-kubectl create namespace example-monitor-pods
-kubectl create serviceaccount monitor-pods-acc --namespace example-monitor-pods
-kubectl create clusterrole monitor-pods --verb=get,watch,list --resource=pods
-kubectl create clusterrolebinding monitor-pods --clusterrole=monitor-pods --serviceaccount=example-monitor-pods:monitor-pods-acc
+kubectl create namespace example-monitor-pods  #创建命名空间example-monitor-pods
+kubectl create serviceaccount monitor-pods-acc --namespace example-monitor-pods  #创建服务账户
+kubectl create clusterrole monitor-pods --verb=get,watch,list --resource=pods  #创建集群角色monitor-pods
+kubectl create clusterrolebinding monitor-pods --clusterrole=monitor-pods --serviceaccount=example-monitor-pods:monitor-pods-acc #创建集群角色绑定monitor-pods
 ```
 
 ## Install shell-operator in a cluster
@@ -136,9 +138,9 @@ Start shell-operator by applying a `shell-operator-pod.yaml` file:
 kubectl -n example-monitor-pods apply -f shell-operator-pod.yaml
 ```
 
-## It all comes together
+## It all comes together 聚集在一起
 
-Let's deploy a [kubernetes-dashboard](https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/) to trigger  `kubernetes` binding defined in our hook:
+Let's deploy a [kubernetes-dashboard](https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/) to trigger  `kubernetes` binding defined in our hook:  让我们部署一个Pod来触发钩子执行
 
 ```shell
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/master/aio/deploy/recommended.yaml
@@ -167,7 +169,7 @@ kubectl delete clusterrolebinding monitor-pods
 
 This example is also available in /examples: [monitor-pods](examples/101-monitor-pods).
 
-# Hook binding types
+# Hook binding types 钩子绑定类型
 
 Every hook should respond with JSON or YAML configuration of bindings when executed with `--config` flag.
 
@@ -190,7 +192,7 @@ kubernetes:
 
 > Note: return configuration as JSON is also possible as JSON is a subset of YAML.
 
-## onStartup
+## onStartup 启动时
 
 This binding has only one parameter: order of execution. Hooks are loaded at the start and then hooks with onStartup binding are executed in the order defined by parameter. Read more about `onStartup` bindings [here](HOOKS.md#onstartup).
 
@@ -201,7 +203,7 @@ configVersion: v1
 onStartup: 10
 ```
 
-## schedule
+## schedule 调度(周期性执行)
 
 This binding is used to execute hooks periodically. A schedule can be defined with a granularity of seconds. Read more about `schedule` bindings [here](HOOKS.md#schedule).
 
@@ -218,47 +220,47 @@ schedule:
   queue: mondays
 ```
 
-# Prometheus target
+# Prometheus target 普罗米修斯目标(暴露指标)
 
 Shell-operator provides a `/metrics` endpoint. More on this in [METRICS](METRICS.md) document.
 
-# Examples and notable users
+# Examples and notable users 案例
 
 More examples of how you can use shell-operator are available in the [examples](examples/) directory.
 
-Prominent shell-operator use cases include:
+Prominent shell-operator use cases include: 典型案例
 
 * [Deckhouse](https://deckhouse.io/) Kubernetes platform where both projects, shell-operator and addon-operator, are used as the core technology to configure & extend K8s features;
-* KubeSphere Kubernetes platform's [installer](https://github.com/kubesphere/ks-installer);
+* KubeSphere Kubernetes platform's [installer](https://github.com/kubesphere/ks-installer); 青云KubeSphere安装
 * [Kafka DevOps solution](https://github.com/confluentinc/streaming-ops) from Confluent.
 
 Please find out & share more examples in [Show & tell discussions](https://github.com/flant/shell-operator/discussions/categories/show-and-tell).
 
-# Articles & talks
+# Articles & talks 博客
 
-Shell-operator has been presented during KubeCon + CloudNativeCon Europe 2020 Virtual (Aug'20). Here is the talk called "Go? Bash! Meet the shell-operator":
+Shell-operator has been presented during KubeCon + CloudNativeCon Europe 2020 Virtual (Aug'20). Here is the talk called "Go? Bash! Meet the shell-operator": 
 
 * [YouTube video](https://www.youtube.com/watch?v=we0s4ETUBLc);
 * [text summary](https://medium.com/flant-com/meet-the-shell-operator-kubecon-36c14ba2f8fe);
 * [slides](https://speakerdeck.com/flant/go-bash-meet-the-shell-operator).
 
-Official publications on shell-operator:
+Official publications on shell-operator: 官方文档
 * "[shell-operator v1.0.0: the long-awaited release of our tool to create Kubernetes operators](https://blog.flant.com/shell-operator-v1-release-for-kubernetes-operators/)" (Apr'21);
 * "[shell-operator & addon-operator news: hooks as admission webhooks, Helm 3, OpenAPI, Go hooks, and more!](https://blog.flant.com/shell-operator-addon-operator-v1-rc1-changes/)" (Feb'21);
 * "[Kubernetes operators made easy with shell-operator: project status & news](https://blog.flant.com/kubernetes-operators-made-easy-with-shell-operator-project-status-news/)" (Jul'20);
 * "[Announcing shell-operator to simplify creating of Kubernetes operators](https://blog.flant.com/announcing-shell-operator-to-simplify-creating-of-kubernetes-operators/)" (May'19).
 
-Other languages:
+Other languages: 其他语言的博客
 * Chinese: "[介绍一个不太小的工具：Shell Operator](https://blog.fleeto.us/post/shell-operator/)"; "[使用shell-operator实现Operator](https://cloud.tencent.com/developer/article/1701733)";
 * Dutch: "[Een operator om te automatiseren – Hoe pak je dat aan?](https://www.hcs-company.com/blog/operator-automatiseren-namespace-openshift)";
 * Russian: "[shell-operator v1.0.0: долгожданный релиз нашего проекта для Kubernetes-операторов](https://habr.com/ru/company/flant/blog/551456/)"; "[Представляем shell-operator: создавать операторы для Kubernetes стало ещё проще](https://habr.com/ru/company/flant/blog/447442/)".
 
-# Community
+# Community 社区
 
 Please feel free to reach developers/maintainers and users via [GitHub Discussions](https://github.com/flant/shell-operator/discussions) for any questions regarding shell-operator.
 
 You're also welcome to follow [@flant_com](https://twitter.com/flant_com) to stay informed about all our Open Source initiatives.
 
-# License
+# License 许可证
 
 Apache License 2.0, see [LICENSE](LICENSE).
